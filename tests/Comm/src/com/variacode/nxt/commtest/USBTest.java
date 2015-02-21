@@ -35,13 +35,13 @@ public class USBTest {
         DataOutputStream outDat = new DataOutputStream(conn.getOutputStream());
         for (int i = 0; i < 100; i++) {
             try {
-                outDat.writeUTF("LOG," + i);
+                outDat.writeUTF("MOVE_FACE,DOWN");// + DOWN);
                 outDat.flush();
             } catch (IOException ioe) {
                 System.out.println(ioe);
                 System.err.println("IO Exception writing bytes");
             }
-            Thread.sleep(2000);
+            Thread.sleep(4000);
             System.out.println("Sent " + "LOG," + i);
         }
 

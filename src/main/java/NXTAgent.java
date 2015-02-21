@@ -20,69 +20,22 @@ public class NXTAgent {
     private static DataInputStream spineIn = null;
     private static NXTConnection spine = null;
     private static final List<String> lcdLog = new LinkedList<String>();
-    private static final List<Pair<Action, String>> actions = new LinkedList<Pair<Action, String>>();
+    private static final List<Pair<String, String>> actions = new LinkedList<Pair<String, String>>();
 
     private static boolean alive = true;
 
     public static void main(String[] args) throws InterruptedException {
         awake();
-        ///TEST////
-        //test();
-        ///TEST////
         be();
     }
 
-    private static void test() {
-        /*
-         actionQueue(new Pair<Action, Object>(Action.MOVE_FACE, Face.DOWN));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.MOVE_FACE, Face.MID));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.MOVE_FACE, Face.UP));*/
-        /*
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.MOVE_FACE, Face.MID));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.MOVE_FACE, Face.DOWN));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.NOTHING, null));
-         actionQueue(new Pair<Action, Object>(Action.MOVE_FACE, Face.MID));*/
-        actionQueue(new Pair<Action, String>(Action.MOVE_FORWARD, null));
-        actionQueue(new Pair<Action, String>(Action.NOTHING, null));
-        actionQueue(new Pair<Action, String>(Action.NOTHING, null));
-        actionQueue(new Pair<Action, String>(Action.MOVE_BACKWARD, null));
-        actionQueue(new Pair<Action, String>(Action.NOTHING, null));
-        actionQueue(new Pair<Action, String>(Action.NOTHING, null));
-        actionQueue(new Pair<Action, String>(Action.MOVE_STOP, null));
-        actionQueue(new Pair<Action, String>(Action.TURN_LEFT, null));
-        actionQueue(new Pair<Action, String>(Action.NOTHING, null));
-        actionQueue(new Pair<Action, String>(Action.TURN_RIGHT, null));
-        actionQueue(new Pair<Action, String>(Action.NOTHING, null));
-        actionQueue(new Pair<Action, String>(Action.MOVE_STOP, null));
-
-    }
-
-    public static void actionQueue(Pair<Action, String> action) {
+    public static void actionQueue(Pair<String, String> action) {
         actions.add(action);
     }
 
     private static void actionDo() {
         if (!actions.isEmpty()) {
-            Pair<Action, String> action = actions.get(0);
+            Pair<String, String> action = actions.get(0);
             actions.remove(0);
             if (action != null) {
                 if (action.first.equals(Action.MOVE_FORWARD)) {
@@ -124,16 +77,35 @@ public class NXTAgent {
             log("CONN NOT INIT");
             return;
         }
-        
         try {
             if (spineIn != null) {
                 String b = spineIn.readUTF();
-                log(b);                //actionQueue(null);
+                if (b != null) {
+                    log("RCVD: " + b);
+                } else {
+                    log("NOT RCVD");
+                    return;
+                }
+                int comma = b.indexOf(",");
+                String[] actPr = new String[2];
+                if (comma > 0) {
+                    actPr[0] = b.substring(0, comma);
+                    actPr[1] = b.substring(comma + 1);
+                } else {
+                    actPr[0] = b;
+                    actPr[1] = null;
+                }
+                try {
+                    Pair<String, String> act = new Pair<String, String>(actPr[0].toUpperCase(), actPr[1]);
+                    actionQueue(act);
+                } catch (IllegalArgumentException e) {
+                    log("NO SE: " + actPr[0]);
+                    log("EJ: " + Action.NOTHING);
+                }
             }
         } catch (Exception e) {
-            log("ERROR READING");
+            log("ERR " + e.getMessage());
         }
-
     }
 
     private static void logClear() {
@@ -213,56 +185,7 @@ public class NXTAgent {
             return;
         }
         spineIn = spine.openDataInputStream();
-        /*
-         conn = new Thread() {
-         @Override
-         public void run() {
-         if (spine != null) {
-         DataInputStream input = spine.openDataInputStream();
-         while (alive) {
-         try {
-         String command = input.readUTF();
-         if (command != null) {
-         log("RCVD: " + command);
-         int comma = command.indexOf(",");
-         String[] actPr = new String[2];
-         if (comma > 0) {
-         actPr[0] = command.substring(0, comma);
-         actPr[1] = command.substring(comma);
-         } else {
-         actPr[0] = command;
-         actPr[1] = null;
-         }
-         try {
-         Pair<Action, String> act = new Pair<Action, String>(Action.valueOf(actPr[0]), actPr[1]);
-         actionQueue(act);
-         } catch (IllegalArgumentException e) {
-         log("NO SE: " + actPr[0]);
-         log("EJ: " + Action.NOTHING.name());
-         }
-         try {
-         Thread.sleep(ALIVE_LOOP_WAIT_MILIS);
-         } catch (InterruptedException ex) {
-         log("COMM THREAD ERROR");
-         }
 
-         } else {
-         log("waiting..");
-         }
-         } catch (IOException ex) {
-         log("CANT READ INPUT ERROR");
-         }
-         }
-         try {
-         input.close();
-         } catch (IOException ex) {
-         log("ERR CLOSING");
-         }
-         }
-         }
-         };
-         conn.setDaemon(true);
-         conn.start();*/
     }
 
     public static class Face {
@@ -272,9 +195,16 @@ public class NXTAgent {
         public final static String UP = "UP";
     }
 
-    public static enum Action {
+    public static class Action {
 
-        NOTHING, MOVE_FORWARD, MOVE_BACKWARD, TURN_RIGHT, TURN_LEFT, MOVE_STOP, LOG, MOVE_FACE
+        public final static String NOTHING = "NOTHING";
+        public final static String MOVE_FORWARD = "MOVE_FORWARD";
+        public final static String MOVE_BACKWARD = "MOVE_BACKWARD";
+        public final static String TURN_RIGHT = "TURN_RIGHT";
+        public final static String TURN_LEFT = "TURN_LEFT";
+        public final static String LOG = "LOG";
+        public final static String MOVE_STOP = "MOVE_STOP";
+        public final static String MOVE_FACE = "MOVE_FACE";
     }
 
     public static class Pilot {
