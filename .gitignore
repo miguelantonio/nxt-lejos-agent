@@ -1,3 +1,6 @@
 lib/pc/
 lib/nxt/classes-src.zip
 src/main/java/*.class
+/commTest/target/
+/tests/Comm/nbproject/private/
+/tests/Comm/build/
